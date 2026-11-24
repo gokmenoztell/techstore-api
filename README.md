@@ -13,11 +13,11 @@ Laravel tabanlı, modüler yapıda tasarlanmış e-ticaret / teknoloji mağazas�
 ## Kurulum
 
 1. Depoyu klonla ve bağımlılıkları yükle:
-    ```bash
-    git clone <repo-url>
-    cd techstore-api
-    composer install
-    ```
+   ```bash
+   git clone <repo-url>
+   cd techstore-api
+   composer install
+   ```
 
 ### 2. Değişikliği `main` Dalına Commit ve Push Et
 
@@ -29,3 +29,16 @@ git add README.md
 git commit -m "docs: update README with project architecture and setup guide"
 git push origin main
 ```
+
+## Hızlı Başlangıç (Docker ile Tek Komut)
+
+Bilgisayarınızda PHP, Node.js veya MySQL kurulu olmasına gerek olmadan tüm sistemi ayağa kaldırmak için:
+
+\`\`\`bash
+git clone https://github.com/gokmenoztell/techstore-api.git
+cd techstore-api
+docker compose up --build
+\`\`\`
+
+- **Frontend (React + Bootstrap):** http://localhost:5173
+- **Backend API (Laravel):** http://127.0.0.1:8000/api/health
