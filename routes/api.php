@@ -42,4 +42,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show'])->whereNumber('id');
     Route::post('/orders', [OrderController::class, 'store']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->whereNumber('id');
+    Route::post('/orders/{id}/pay', [OrderController::class, 'pay'])->whereNumber('id');
 });

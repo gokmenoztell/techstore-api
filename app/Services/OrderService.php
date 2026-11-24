@@ -159,4 +159,34 @@ class OrderService
 
         return $totals;
     }
+
+    public function pay(User $user, int $orderId): Order
+    {
+        return DB::transaction(function () use ($user, $orderId) {
+            /** @var Order $order */
+            $order = Order::query()
+                ->with(['items.product'])
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->findOrFail($orderId);
+
+            if ($order->status === Order::STATUS_PAID) {
+                throw ValidationException::withMessages([
+                    'order' => ['Bu sipariş zaten ödenmiş.'],
+                ]);
+            }
+
+            if ($order->status !== Order::STATUS_PENDING) {
+                throw ValidationException::withMessages([
+                    'order' => ['Yalnızca bekleyen (pending) siparişler ödenebilir.'],
+                ]);
+            }
+
+            $order->update([
+                'status' => Order::STATUS_PAID,
+            ]);
+
+            return $order->load(['items.product']);
+        });
+    }
 }

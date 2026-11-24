@@ -45,4 +45,11 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    public function pay(Request $request, int $id): OrderResource
+    {
+        $order = $this->orderService->pay($request->user(), $id);
+
+        return new OrderResource($order);
+    }
 }

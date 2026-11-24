@@ -135,4 +135,34 @@ class OrderApiTest extends TestCase
         $this->getJson("/api/orders/{$orderId}")->assertNotFound();
         $this->postJson("/api/orders/{$orderId}/cancel")->assertNotFound();
     }
+
+    public function test_user_can_pay_pending_order_and_cannot_cancel_paid_order(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->createProduct(['price' => '1000.00', 'stock' => 10]);
+
+        Sanctum::actingAs($user);
+
+        $orderId = $this->postJson('/api/orders', [
+            'shipping_address' => 'Esenler, Istanbul',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 2],
+            ],
+        ])->assertStatus(201)->json('data.id');
+
+        $this->postJson("/api/orders/{$orderId}/pay")
+            ->assertOk()
+            ->assertJsonPath('data.status', Order::STATUS_PAID);
+
+        $this->postJson("/api/orders/{$orderId}/pay")
+            ->assertStatus(422);
+
+        $this->postJson("/api/orders/{$orderId}/cancel")
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'stock' => 8,
+        ]);
+    }
 }
