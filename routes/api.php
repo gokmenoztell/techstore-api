@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,4 +35,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
     Route::patch('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->whereNumber('product');
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->whereNumber('id');
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->whereNumber('id');
 });
