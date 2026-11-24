@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,4 +12,14 @@ Route::get('/health', function () {
         'success' => true,
         'message' => 'TechStore API is running',
     ]);
+});
+
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
+    Route::patch('/products/{product}', [ProductController::class, 'update'])->whereNumber('product');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->whereNumber('product');
 });
