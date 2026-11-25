@@ -2,9 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ProductService
 {
@@ -55,7 +59,23 @@ class ProductService
 
     public function delete(Product $product): void
     {
-        $product->delete();
+        if (
+            Schema::hasTable('order_items')
+            && Schema::hasColumn('order_items', 'product_id')
+            && OrderItem::query()->where('product_id', $product->id)->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'product' => ['Bu ürüne ait sipariş kayıtları bulunduğu için silinemez. Ürünü satışa kapatabilir veya stoğunu 0 yapabilirsiniz.'],
+            ]);
+        }
+
+        try {
+            $product->delete();
+        } catch (QueryException) {
+            throw ValidationException::withMessages([
+                'product' => ['Bu ürün ilişkili kayıtlar nedeniyle silinemedi. Ürünü satışa kapatabilir veya stoğunu 0 yapabilirsiniz.'],
+            ]);
+        }
     }
 
     private function generateUniqueSlug(string $source, ?int $ignoreId = null): string

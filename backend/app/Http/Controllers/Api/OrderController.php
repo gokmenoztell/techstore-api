@@ -39,6 +39,7 @@ class OrderController extends Controller
             ->response()
             ->setStatusCode(201);
     }
+
     public function cancel(Request $request, int $id): OrderResource
     {
         $order = $this->orderService->cancel($request->user(), $id);
@@ -48,7 +49,17 @@ class OrderController extends Controller
 
     public function pay(Request $request, int $id): OrderResource
     {
-        $order = $this->orderService->pay($request->user(), $id);
+        $validated = $request->validate([
+            'sandbox_outcome' => ['nullable', 'in:success,declined'],
+            'card_last4' => ['nullable', 'regex:/^\d{4}$/'],
+        ]);
+
+        $order = $this->orderService->pay(
+            user: $request->user(),
+            orderId: $id,
+            outcome: $validated['sandbox_outcome'] ?? 'success',
+            cardLast4: $validated['card_last4'] ?? null,
+        );
 
         return new OrderResource($order);
     }
