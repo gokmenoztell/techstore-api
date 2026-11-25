@@ -15,7 +15,6 @@ export default function Navbar({ user, onUserChange, cartCount }: NavbarProps) {
         try {
             await api.post('/auth/logout');
         } catch {
-            // Sunucu yanıtı dönmese bile yerel token temizlenir
         } finally {
             localStorage.removeItem('token');
             onUserChange(null);

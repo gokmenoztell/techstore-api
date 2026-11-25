@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import type { Order, Product, User } from '../types';
 
@@ -22,6 +23,7 @@ export default function Store({
     onUpdateQty,
     onClearCart,
 }: StoreProps) {
+    const navigate = useNavigate();
     const [products, setProducts] = useState<Product[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
@@ -57,7 +59,7 @@ export default function Store({
 
     const handleCreateOrder = async () => {
         if (!user) {
-            setFeedback({ type: 'danger', text: 'Sipariş vermek için önce giriş yapmalısın.' });
+            navigate('/login?redirect=/');
             return;
         }
         if (cart.length === 0) return;

@@ -35,7 +35,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 res.data?.token ?? res.data?.data?.token ?? res.data?.access_token;
 
             if (!token) {
-                setError('Giriş yanıtında token bulunamadı.');
+                setError('Yanıtta oturum anahtarı bulunamadı.');
                 setLoading(false);
                 return;
             }
@@ -54,8 +54,23 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 navigate('/', { replace: true });
             }
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { message?: string } } };
-            setError(axiosErr.response?.data?.message || 'Giriş işlemi başarısız oldu.');
+            const axiosErr = err as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        errors?: Record<string, string[]>;
+                    };
+                };
+            };
+            const firstValidationError = axiosErr.response?.data?.errors
+                ? Object.values(axiosErr.response.data.errors).flat()[0]
+                : undefined;
+
+            setError(
+                firstValidationError ||
+                axiosErr.response?.data?.message ||
+                (isRegister ? 'Kayıt işlemi başarısız oldu.' : 'Giriş işlemi başarısız oldu.')
+            );
         } finally {
             setLoading(false);
         }
@@ -69,9 +84,16 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                         <h4 className="card-title mb-2 text-center">
                             {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
                         </h4>
+
                         {redirectParam === '/admin' && !isRegister && (
                             <p className="text-muted small text-center mb-3">
                                 Yönetim Paneline erişmek için admin hesabınla giriş yap.
+                            </p>
+                        )}
+
+                        {redirectParam === '/' && (
+                            <p className="text-muted small text-center mb-3">
+                                Siparişini tamamlamak için giriş yap veya müşteri hesabı oluştur.
                             </p>
                         )}
 
@@ -109,8 +131,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                                     className="form-control"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    minLength={8}
                                     required
                                 />
+                                {isRegister && (
+                                    <div className="form-text">En az 8 karakter olmalı.</div>
+                                )}
                             </div>
 
                             <button
