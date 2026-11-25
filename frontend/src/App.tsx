@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import api from './api/client';
 import Navbar from './components/Navbar';
 import Admin from './pages/Admin';
@@ -7,13 +7,60 @@ import Login from './pages/Login';
 import Store, { type CartItem } from './pages/Store';
 import type { Product, User } from './types';
 
+function isAdminUser(user: User | null): boolean {
+  return Boolean(user && user.role?.toLowerCase() === 'admin');
+}
+
+interface AdminRouteProps {
+  user: User | null;
+  authChecked: boolean;
+  children: ReactNode;
+}
+
+function AdminRoute({ user, authChecked, children }: AdminRouteProps) {
+  const location = useLocation();
+
+  if (!authChecked) {
+    return <div className="py-5 text-center text-muted">Oturum kontrol ediliyor...</div>;
+  }
+
+  if (!user) {
+    const redirectTo = encodeURIComponent(location.pathname);
+    return <Navigate to={`/login?redirect=${redirectTo}`} replace />;
+  }
+
+  if (!isAdminUser(user)) {
+    return (
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="alert alert-warning mt-3">
+            <h5 className="alert-heading">Yetkisiz Erişim</h5>
+            <p className="mb-3">
+              Yönetim Paneli yalnızca <strong>admin</strong> yetkisine sahip hesaplara açıktır.
+            </p>
+            <Link to="/" className="btn btn-dark btn-sm">
+              Mağazaya Dön
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      setAuthChecked(true);
+      return;
+    }
 
     api
       .get('/auth/me')
@@ -23,6 +70,10 @@ export default function App() {
       })
       .catch(() => {
         localStorage.removeItem('token');
+        setUser(null);
+      })
+      .finally(() => {
+        setAuthChecked(true);
       });
   }, []);
 
@@ -69,7 +120,15 @@ export default function App() {
             }
           />
           <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute user={user} authChecked={authChecked}>
+                <Admin user={user} />
+              </AdminRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </BrowserRouter>

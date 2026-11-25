@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/client';
 import type { User } from '../types';
 
@@ -15,6 +15,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    const redirectParam = searchParams.get('redirect');
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -42,10 +45,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             const meRes = await api.get('/auth/me');
             const userData: User = meRes.data?.data ?? meRes.data?.user ?? meRes.data;
             onLoginSuccess(userData);
-            navigate('/');
+
+            if (redirectParam && redirectParam.startsWith('/')) {
+                navigate(redirectParam, { replace: true });
+            } else if (userData.role?.toLowerCase() === 'admin') {
+                navigate('/admin', { replace: true });
+            } else {
+                navigate('/', { replace: true });
+            }
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string } } };
-            setError(axiosErr.response?.data?.message || 'İşlem başarısız oldu.');
+            setError(axiosErr.response?.data?.message || 'Giriş işlemi başarısız oldu.');
         } finally {
             setLoading(false);
         }
@@ -56,9 +66,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <div className="col-md-5">
                 <div className="card shadow-sm">
                     <div className="card-body p-4">
-                        <h4 className="card-title mb-3 text-center">
+                        <h4 className="card-title mb-2 text-center">
                             {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
                         </h4>
+                        {redirectParam === '/admin' && !isRegister && (
+                            <p className="text-muted small text-center mb-3">
+                                Yönetim Paneline erişmek için admin hesabınla giriş yap.
+                            </p>
+                        )}
 
                         {error && <div className="alert alert-danger py-2">{error}</div>}
 
@@ -104,9 +119,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                                 disabled={loading}
                             >
                                 {loading
-                                    ? 'Bekleniyor...'
+                                    ? 'İşleniyor...'
                                     : isRegister
-                                        ? 'Kayıt Tamamla'
+                                        ? 'Kaydı Tamamla'
                                         : 'Giriş Yap'}
                             </button>
                         </form>

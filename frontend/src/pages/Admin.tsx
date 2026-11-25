@@ -1,8 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import api from '../api/client';
-import type { Product } from '../types';
+import type { Product, User } from '../types';
 
-export default function Admin() {
+interface AdminProps {
+    user: User | null;
+}
+
+export default function Admin({ user }: AdminProps) {
     const [products, setProducts] = useState<Product[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [name, setName] = useState('');
@@ -88,7 +92,14 @@ export default function Admin() {
 
     return (
         <div>
-            <h4 className="mb-3">Yönetim Paneli — Ürün Yönetimi</h4>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="mb-0">Yönetim Paneli — Ürün Yönetimi</h4>
+                {user && (
+                    <span className="badge bg-secondary">
+                        Admin: {user.name} ({user.email})
+                    </span>
+                )}
+            </div>
 
             {message && (
                 <div className={`alert alert-${message.type}`}>{message.text}</div>
