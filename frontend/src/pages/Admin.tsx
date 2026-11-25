@@ -96,7 +96,7 @@ export default function Admin({ user }: AdminProps) {
                 <h4 className="mb-0">Yönetim Paneli — Ürün Yönetimi</h4>
                 {user && (
                     <span className="badge bg-secondary">
-                        Admin: {user.name} ({user.email})
+                        Admin kullanici ad: {user.name}  Eposta: ({user.email})
                     </span>
                 )}
             </div>

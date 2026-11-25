@@ -239,6 +239,7 @@ export default function Store({
                 </div>
 
                 <div className="col-lg-4" id="cart">
+                    <h4 className="mb-3">Liste</h4>
                     <div className="card shadow-sm mb-4">
                         <div className="card-header bg-white fw-bold">Sepet</div>
                         <div className="card-body">
