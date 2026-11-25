@@ -6,12 +6,18 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Payments\PaymentGatewayInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
+    public function __construct(
+        private readonly PaymentGatewayInterface $paymentGateway,
+    ) {
+    }
+
     public function listForUser(User $user, int $perPage = 15): LengthAwarePaginator
     {
         return Order::query()
@@ -160,9 +166,13 @@ class OrderService
         return $totals;
     }
 
-    public function pay(User $user, int $orderId): Order
-    {
-        return DB::transaction(function () use ($user, $orderId) {
+    public function pay(
+        User $user,
+        int $orderId,
+        string $outcome = 'success',
+        ?string $cardLast4 = null,
+    ): Order {
+        return DB::transaction(function () use ($user, $orderId, $outcome, $cardLast4) {
             /** @var Order $order */
             $order = Order::query()
                 ->with(['items.product'])
@@ -179,6 +189,19 @@ class OrderService
             if ($order->status !== Order::STATUS_PENDING) {
                 throw ValidationException::withMessages([
                     'order' => ['Yalnızca bekleyen (pending) siparişler ödenebilir.'],
+                ]);
+            }
+
+            $paymentResult = $this->paymentGateway->charge(
+                orderId: $order->id,
+                amount: (string) $order->total_amount,
+                outcome: $outcome,
+                cardLast4: $cardLast4,
+            );
+
+            if (!$paymentResult->successful) {
+                throw ValidationException::withMessages([
+                    'payment' => [$paymentResult->message],
                 ]);
             }
 

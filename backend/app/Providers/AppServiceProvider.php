@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\Payments\PaymentGatewayInterface;
+use App\Services\Payments\SandboxPaymentGateway;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            PaymentGatewayInterface::class,
+            SandboxPaymentGateway::class
+        );
     }
 
     /**
